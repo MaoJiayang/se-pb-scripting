@@ -1,6 +1,6 @@
 """
 sync-pb-api.py — 将 malforge/malforge.github.io 的 input/pb 类型文档同步到 skill references/pb-api/
-
+该脚本用于更新/下载 PB API 相关的 Markdown 文档
 用法：
     python sync-pb-api.py          # 首次运行自动 clone，后续自动 pull 更新
     python sync-pb-api.py --force  # 强制重新复制所有文件，忽略时间戳比较

@@ -112,7 +112,8 @@ GridTerminalSystem.GetBlocksOfType(myBlocks, b =>
 ### 性能
 
 - `GetBlocksOfType` 有遍历开销，**务必在构造函数中缓存**，不要在 `Main()` 里每 tick 调用
-- 每 tick 指令上限约 **100,000**，超出脚本立即终止；用 `Runtime.CurrentInstructionCount` 监控
+- 每次运行 code junctions（方法调用、条件、循环等）上限约 **50,000**，超出脚本立即终止；用 `Runtime.CurrentInstructionCount` 监控
+- 另有脚本字符上限 **100,000**（针对压缩后的内容；`mdk.ini` 里设置 `minify=full` 可显著节省字符，让更多逻辑塞进同等上限）
 - 字符串拼接（`+`）在循环中会产生大量分配，优先用 `StringBuilder`
 
 ### 子网格过滤
@@ -148,4 +149,4 @@ gyro.Roll  = (float)-local.Z;
 
 - C# **语言版本为 6**，不能用模式匹配、元组、本地函数、`is` 类型匹配等 C# 7+ 特性
 - 禁用 `System.IO`、`System.Net`、`System.Reflection`、`unsafe` 代码
-- `Storage` 字段在脚本重新编译后会清空，不能依赖它跨编译持久化
+- `Storage` 字段存储在 PB 方块的状态里：随世界存档保存（游戏加载时恢复），也随蓝图一起转移（复制/粘贴飞船时携带）；脚本重编译前 `Save()` 会被自动调用，因此 Storage **也在重编译后持久**

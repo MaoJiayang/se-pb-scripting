@@ -40,7 +40,7 @@ description: "Space Engineers 可编程方块脚本开发技能。用于：编�
 
 - **语言版本**：C# 6（无模式匹配、元组、本地函数等 C# 7+ 特性）
 - **命名空间**：必须为 `IngameScript`，打包时被剥离
-- **指令上限**：每 tick 约 100,000 条，超出脚本终止
+- **指令上限**：每次运行约 50,000 个 code junctions（方法调用、条件、循环等）；脚本字符上限 100,000
 - **禁用**：`System.IO`、`System.Net`、`System.Reflection`、unsafe、静态构造函数
 - **入口**：继承 `MyGridProgram`，实现 `Main(string argument, UpdateType updateSource)`
 

@@ -51,6 +51,7 @@ type=programmableblock      ; 不要改
 
 ; 压缩级别（影响发布脚本的字符数）
 ; none | trim | stripcomments | lite | full
+; 注意：IngameScripts 展示的是压缩后的内容，字符上限 100,000 针对压缩后，因此 minify=full 可显著减少占用
 minify=none
 
 ; 排除文件（glob 格式）
@@ -84,7 +85,9 @@ VS Code 中也可以用 `Ctrl+Shift+B` → 选择发布任务。
 bin/
 obj/
 .vs/
+.idea/
 *.user
+*.suo
 *.mdk.local.ini
 thumb.png
 ```
