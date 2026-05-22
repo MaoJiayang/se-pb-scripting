@@ -22,6 +22,18 @@ description: "Space Engineers 可编程方块脚本开发技能。用于：编�
 - `VRageMath.Vector3D.md` → Vector3D 类
 - `List-Of-Terminal-Properties-And-Actions.md` → 所有终端方块属性与动作完整清单
 
+### pb-api/ 目录缺失时
+
+如果 `references/pb-api/` 为空或不存在，**在继续之前告知用户需要先运行同步脚本**：
+
+```
+需要先同步 SE API 文档，请在 skill 仓库根目录执行：
+    python scripts/sync-pb-api.py
+（首次运行会自动 clone malforge/malforge.github.io，约需几分钟）
+```
+
+同步完成后再继续任务。
+
 ---
 
 ## 第一步：项目初始化检查
