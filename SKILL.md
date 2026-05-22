@@ -24,11 +24,13 @@ description: "Space Engineers 可编程方块脚本开发技能。用于：编�
 
 ```
 references/pb-api/Sandbox.ModAPI.Ingame.IMyXxx.md
+references/pb-api/SpaceEngineers.Game.ModAPI.Ingame.IMyXxx.md
 references/pb-api/VRageMath.Vector3D.md
 references/pb-api/List-Of-Terminal-Properties-And-Actions.md
 ```
 
-例：`IMyThrust` → `references/pb-api/Sandbox.ModAPI.Ingame.IMyThrust.md`
+例：`IMyThrust` → `references/pb-api/Sandbox.ModAPI.Ingame.IMyThrust.md`  
+例：`IMyGravityGenerator` → `references/pb-api/SpaceEngineers.Game.ModAPI.Ingame.IMyGravityGenerator.md`
 
 **接口名不确定时**：接口名未知导致搜索返回空结果，原因是 gitignore——此时需换用能够绕过 gitignore 的文件发现方式或者参数。
 

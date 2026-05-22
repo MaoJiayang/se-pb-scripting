@@ -22,6 +22,7 @@ SPARSE_PATHS = ["input/pb", "input/mod"]  # 需要的子目录
 # 只复制这些命名空间的类型级文件（不含 @ 成员文件），来源：input/pb/
 NAMESPACE_PATTERNS = [
     "Sandbox.ModAPI.Ingame.*.md",
+    "SpaceEngineers.Game.ModAPI.Ingame.*.md",
     "VRageMath.*.md",
 ]
 
