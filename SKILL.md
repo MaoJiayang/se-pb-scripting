@@ -18,10 +18,20 @@ description: "Space Engineers 可编程方块脚本开发技能。用于：编�
 
 ### 查找接口文档
 
-需要某个接口的完整成员列表时，直接在 `references/pb-api/` 中搜索对应文件名，例如：
-- `Sandbox.ModAPI.Ingame.IMyThrust.md` → 推进器接口
-- `VRageMath.Vector3D.md` → Vector3D 类
-- `List-Of-Terminal-Properties-And-Actions.md` → 所有终端方块属性与动作完整清单
+`pb-api/` 目录被 `.gitignore` 排除，**`file_search` 无法找到其中的文件**。
+正确做法是**直接构造路径用 `read_file` 读取**，命名规则固定：
+
+```
+<skill目录>/references/pb-api/Sandbox.ModAPI.Ingame.IMyXxx.md
+<skill目录>/references/pb-api/VRageMath.Vector3D.md
+```
+
+示例：
+- 推进器 → `references/pb-api/Sandbox.ModAPI.Ingame.IMyThrust.md`
+- Vector3D → `references/pb-api/VRageMath.Vector3D.md`
+- 终端属性 → `references/pb-api/List-Of-Terminal-Properties-And-Actions.md`
+
+如果需要**浏览目录全部文件**（例如不确定接口名），使用 `list_dir` 而非 `file_search`。
 
 ### pb-api/ 目录缺失时
 
