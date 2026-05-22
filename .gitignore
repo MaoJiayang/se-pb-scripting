@@ -7,3 +7,6 @@ bin/
 
 # sync-pb-api.py 的源仓库缓存（不纳入版本管理）
 .cache/
+
+# 由 sync-pb-api.py 从 malforge/malforge.github.io 拉取的 API 文档（未持有再发布授权）
+references/pb-api/
