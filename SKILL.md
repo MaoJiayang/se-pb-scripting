@@ -18,7 +18,7 @@ description: "Space Engineers 可编程方块脚本开发技能。用于：编�
 
 ### 查找接口文档
 
-`pb-api/` 目录被 `.gitignore` 排除，因此**基于 VS Code 搜索索引的文件搜索会找不到其中的文件**，这是正常现象，不代表文件缺失。
+`pb-api/` 目录被 `.gitignore` 排除，因此有时文件搜索会找不到其中的文件，这是正常现象，不一定代表文件缺失。
 
 **首选方案**：pb-api 文件命名规则固定，直接构造路径读取，无需搜索：
 
@@ -30,7 +30,7 @@ references/pb-api/List-Of-Terminal-Properties-And-Actions.md
 
 例：`IMyThrust` → `references/pb-api/Sandbox.ModAPI.Ingame.IMyThrust.md`
 
-**接口名不确定时**：接口名未知导致搜索返回空结果，原因是 gitignore——此时需换用能够绕过 gitignore 的文件发现方式。
+**接口名不确定时**：接口名未知导致搜索返回空结果，原因是 gitignore——此时需换用能够绕过 gitignore 的文件发现方式或者参数。
 
 ### pb-api/ 目录缺失时
 
