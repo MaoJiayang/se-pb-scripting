@@ -13,6 +13,7 @@ description: "Space Engineers 可编程方块脚本开发技能。用于：编�
 |------|------|
 | [references/se-gotchas.md](./references/se-gotchas.md) | 枚举速查、VRageMath 代码片段、方块查找模式、踩坑注意事项 |
 | [references/project-init.md](./references/project-init.md) | MDK2 项目初始化、打包、配置详细说明 |
+| [references/se-patterns.md](./references/se-patterns.md) | 参数管理器范式骨架代码、PID/CircularQueue/MovingAverageQueue 用法 |
 | `references/pb-api/` | 所有 PB 可用接口的完整类型文档（每个接口一个 .md 文件） |
 
 ### 查找接口文档
@@ -90,3 +91,14 @@ namespace IngameScript
 ```
 
 详细陷阱与代码模式见 [references/se-gotchas.md](./references/se-gotchas.md)。
+
+---
+
+## 参数管理器范式 & 通用工具
+
+**新建项目或添加可调参数时**，参考 [references/se-patterns.md](./references/se-patterns.md)：
+
+- **参数管理器**：将可调超参数集中在一个类中，自动读写 `Me.CustomData`（`key = value` 格式，支持注释）。新参数：声明属性 → 在 `注册所有参数()` 中注册委托，两步完成。
+- **PID / PID3**：单轴/三轴 PID，支持输出限幅与 Back-calculation 抗饱和。
+- **CircularQueue\<T\>**：定容环形缓冲区，O(1) 插入和按龄索引。
+- **MovingAverageQueue\<T\>**：继承 CircularQueue，O(1) 滑动均值，委托支持任意类型。
