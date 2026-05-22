@@ -13,7 +13,7 @@ description: "Space Engineers 可编程方块脚本开发技能。用于：编�
 |------|------|
 | [references/se-gotchas.md](./references/se-gotchas.md) | 枚举速查、VRageMath 代码片段、方块查找模式、踩坑注意事项 |
 | [references/project-init.md](./references/project-init.md) | MDK2 项目初始化、打包、配置详细说明 |
-| [references/se-patterns.md](./references/se-patterns.md) | 参数管理器范式骨架代码、PID/CircularQueue/MovingAverageQueue 用法 |
+| [references/se-patterns.md](./references/se-patterns.md) | 参数管理器范式骨架代码（含完整实现）、PID/CircularQueue/MovingAverageQueue 完整实现 + 用法 |
 | `references/pb-api/` | 所有 PB 可用接口的完整类型文档（每个接口一个 .md 文件） |
 
 ### 查找接口文档

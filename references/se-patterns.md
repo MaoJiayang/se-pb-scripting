@@ -243,76 +243,263 @@ public void Main(string argument, UpdateType updateSource)
 
 ## 二、通用工具类
 
-### PID 控制器
+> 将以下代码复制到新项目的 `Utils.cs`（或任意 .cs 文件）中即可使用，无需修改。
 
-单轴 PID，支持输出限幅（自动启用 Back-calculation 抗饱和）和积分限幅：
+### PID / PID3 实现
 
 ```csharp
-var pid = new PID(kp: 16.0, ki: 0.05, kd: 8.0, dt: 1.0/6.0);
+using System;
+using VRageMath;
 
-// 可选：设置输出上下限（同时启用 Back-calculation 抗饱和）
-pid.SetOutputLimits(-Math.PI, Math.PI);
+namespace IngameScript
+{
+    /// <summary>
+    /// 单轴 PID 控制器，支持输出限幅与 Back-calculation 抗积分饱和。
+    /// </summary>
+    public class PID
+    {
+        double _kp, _ki, _kd, _dt;
+        double _prevError, _integral;
+        double _outputMax = double.MaxValue, _outputMin = double.MinValue;
+        double _integralMax = double.MaxValue, _integralMin = double.MinValue;
+        bool _useBackCalc = false;
+        double _backCalcFactor = 0.1;
 
-// 可选：单独设置积分限幅
+        public PID(double kp, double ki, double kd, double dt)
+        { _kp = kp; _ki = ki; _kd = kd; _dt = dt; }
+
+        /// <summary>设置输出上下限，同时自动启用 Back-calculation 抗饱和。</summary>
+        public void SetOutputLimits(double min, double max)
+        { _outputMin = min; _outputMax = max; _useBackCalc = true; }
+
+        public void SetIntegralLimits(double min, double max)
+        { _integralMin = min; _integralMax = max; }
+
+        public void SetBackCalculationFactor(double factor)
+        { _backCalcFactor = factor; }
+
+        public double GetOutput(double error)
+        {
+            _integral += error * _dt;
+            if (_integral > _integralMax) _integral = _integralMax;
+            if (_integral < _integralMin) _integral = _integralMin;
+
+            double derivative = (error - _prevError) / _dt;
+            _prevError = error;
+
+            double output = _kp * error + _ki * _integral + _kd * derivative;
+
+            if (_useBackCalc)
+            {
+                double raw = output;
+                if (output > _outputMax) output = _outputMax;
+                else if (output < _outputMin) output = _outputMin;
+
+                if (output != raw && Math.Abs(_ki) > 1e-10)
+                {
+                    _integral += (output - raw) * _backCalcFactor / _ki;
+                    if (_integral > _integralMax) _integral = _integralMax;
+                    if (_integral < _integralMin) _integral = _integralMin;
+                }
+            }
+
+            if (double.IsNaN(output) || double.IsInfinity(output)) Reset();
+            return output;
+        }
+
+        public void Reset() { _prevError = 0; _integral = 0; }
+    }
+
+    /// <summary>
+    /// 三轴 PID，各轴独立控制，输入/输出均为 Vector3D。
+    /// </summary>
+    public class PID3
+    {
+        readonly PID _x, _y, _z;
+
+        public PID3(double kp, double ki, double kd, double dt)
+        { _x = new PID(kp, ki, kd, dt); _y = new PID(kp, ki, kd, dt); _z = new PID(kp, ki, kd, dt); }
+
+        public void SetOutputLimits(double min, double max)
+        { _x.SetOutputLimits(min, max); _y.SetOutputLimits(min, max); _z.SetOutputLimits(min, max); }
+
+        public void SetOutputLimits(Vector3D min, Vector3D max)
+        { _x.SetOutputLimits(min.X, max.X); _y.SetOutputLimits(min.Y, max.Y); _z.SetOutputLimits(min.Z, max.Z); }
+
+        public void SetIntegralLimits(double min, double max)
+        { _x.SetIntegralLimits(min, max); _y.SetIntegralLimits(min, max); _z.SetIntegralLimits(min, max); }
+
+        public Vector3D GetOutput(Vector3D error)
+        { return new Vector3D(_x.GetOutput(error.X), _y.GetOutput(error.Y), _z.GetOutput(error.Z)); }
+
+        public void Reset() { _x.Reset(); _y.Reset(); _z.Reset(); }
+
+        public PID PidX => _x;
+        public PID PidY => _y;
+        public PID PidZ => _z;
+    }
+}
+```
+
+#### 用法示例
+
+```csharp
+var pid = new PID(kp: 16.0, ki: 0.05, kd: 8.0, dt: 1.0 / 6.0);
+pid.SetOutputLimits(-Math.PI, Math.PI); // 同时启用 Back-calculation 抗饱和
 pid.SetIntegralLimits(-90, 90);
 
-// 每 tick 调用一次
-double output = pid.GetOutput(error);
+double output = pid.GetOutput(error);   // 每 tick 调用一次
+pid.Reset();                            // 切换目标时重置状态
 
-// 状态重置（切换目标时调用）
-pid.Reset();
-```
-
-三轴 PID（各轴独立参数），返回 `Vector3D`：
-
-```csharp
 var pid3 = new PID3(kp: 5, ki: 0, kd: 0, dt: dt);
 pid3.SetOutputLimits(-1, 1);
-Vector3D output = pid3.GetOutput(errorVec);
+Vector3D output3 = pid3.GetOutput(errorVec);
 ```
 
-### CircularQueue\<T\>（定容环形缓冲区）
+---
 
-固定容量，满时覆盖最旧元素，O(1) 插入和索引读取：
+### CircularQueue\<T\> / MovingAverageQueue\<T\> 实现
 
 ```csharp
-var queue = new CircularQueue<Vector3D>(12);
-queue.AddFirst(currentPos);          // 插入（最新 = index 0）
-Vector3D latest = queue.First;       // 最新元素
-Vector3D oldest = queue.Last;        // 最旧元素
-Vector3D ago3   = queue.GetItemAt(3); // 3帧前
-int count = queue.Count;
-queue.Clear();
+using System;
+
+namespace IngameScript
+{
+    /// <summary>
+    /// 定容环形缓冲区：满时覆盖最旧元素，O(1) 插入，O(1) 按龄索引。
+    /// index 0 = 最新，index Count-1 = 最旧。
+    /// </summary>
+    public class CircularQueue<T>
+    {
+        readonly T[] _items;
+        int _head = -1, _size;
+        readonly int _capacity;
+        public bool HasError { get; private set; }
+
+        public CircularQueue(int capacity)
+        { _items = new T[capacity]; _capacity = capacity; }
+
+        public void AddFirst(T item)
+        {
+            _head = (_head + 1) % _capacity;
+            _items[_head] = item;
+            if (_size < _capacity) _size++;
+            HasError = false;
+        }
+
+        public void Clear() { _size = 0; _head = -1; HasError = false; }
+
+        public T GetItemAt(int index)
+        {
+            if (index < 0 || index >= _size) { HasError = true; return default(T); }
+            return _items[(_head - index + _capacity) % _capacity];
+        }
+
+        public bool TryGetItemAt(int index, out T item)
+        {
+            if (index < 0 || index >= _size) { item = default(T); HasError = true; return false; }
+            item = _items[(_head - index + _capacity) % _capacity];
+            return true;
+        }
+
+        public T First
+        {
+            get
+            {
+                if (_size == 0) { HasError = true; return default(T); }
+                return _items[_head];
+            }
+        }
+
+        public T Last
+        {
+            get
+            {
+                if (_size == 0) { HasError = true; return default(T); }
+                return _items[(_head - (_size - 1) + _capacity) % _capacity];
+            }
+        }
+
+        public bool TryGetFirst(out T item)
+        {
+            if (_size == 0) { item = default(T); HasError = true; return false; }
+            item = _items[_head]; return true;
+        }
+
+        public bool TryGetLast(out T item)
+        {
+            if (_size == 0) { item = default(T); HasError = true; return false; }
+            item = _items[(_head - (_size - 1) + _capacity) % _capacity]; return true;
+        }
+
+        public bool IsEmpty => _size == 0;
+        public int Count => _size;
+    }
+
+    /// <summary>
+    /// 滑动平均队列：O(1) 更新和查询，通过委托支持任意类型 T。
+    /// </summary>
+    public class MovingAverageQueue<T> : CircularQueue<T>
+    {
+        readonly int _capacity;
+        readonly Func<T, T, T> _add, _subtract;
+        readonly Func<T, int, T> _divide;
+        T _sum;
+
+        public MovingAverageQueue(int capacity,
+            Func<T, T, T> add, Func<T, T, T> subtract, Func<T, int, T> divide)
+            : base(capacity)
+        {
+            _capacity = capacity;
+            _add = add; _subtract = subtract; _divide = divide;
+            _sum = default(T);
+        }
+
+        public new void AddFirst(T item)
+        {
+            T removed = default(T);
+            if (Count == _capacity) removed = GetItemAt(Count - 1);
+            base.AddFirst(item);
+            _sum = _subtract(_add(_sum, item), removed);
+        }
+
+        public T Sum => _sum;
+        public T Average => Count > 0 ? _divide(_sum, Count) : default(T);
+    }
+}
 ```
 
-### MovingAverageQueue\<T\>（O(1) 滑动平均）
-
-继承 `CircularQueue<T>`，通过构造时传入运算委托支持任意类型：
+#### 用法示例
 
 ```csharp
-// Vector3D 滑动平均
+// CircularQueue：记录最近 12 帧位置
+var history = new CircularQueue<Vector3D>(12);
+history.AddFirst(currentPos);           // 最新 = index 0
+Vector3D latest = history.First;
+Vector3D oldest = history.Last;
+Vector3D threeFramesAgo = history.GetItemAt(3);
+
+// MovingAverageQueue：5 帧滑动平均（Vector3D）
 var ma = new MovingAverageQueue<Vector3D>(
-    capacity: 5,
-    add:      (a, b) => a + b,
-    subtract: (a, b) => a - b,
-    divide:   (a, n) => a / n
+    5,
+    (a, b) => a + b,
+    (a, b) => a - b,
+    (a, n) => a / n
 );
+ma.AddFirst(vec);
+Vector3D avg = ma.Average;
 
-// double 滑动平均
+// MovingAverageQueue：double 版本
 var maD = new MovingAverageQueue<double>(
     5,
     (a, b) => a + b,
     (a, b) => a - b,
     (a, n) => a / n
 );
-
-ma.AddFirst(vec);
-Vector3D avg = ma.Average;   // 当前窗口均值
-Vector3D sum = ma.Sum;       // 当前窗口总和
 ```
 
-> **注意**：`MovingAverageQueue<T>` 用 `new` 关键字重写了 `AddFirst()`，
-> 务必通过 `MovingAverageQueue<T>` 类型的引用调用，不要向上转型为 `CircularQueue<T>` 再插入。
+> **注意**：`MovingAverageQueue<T>.AddFirst()` 用 `new` 重写了父类方法。  
+> 务必通过 `MovingAverageQueue<T>` 类型引用调用，不要向上转型为 `CircularQueue<T>` 再插入，否则滑动和不会更新。
 
 ---
 
