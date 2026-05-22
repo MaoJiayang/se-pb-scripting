@@ -18,20 +18,29 @@ description: "Space Engineers 可编程方块脚本开发技能。用于：编�
 
 ### 查找接口文档
 
-`pb-api/` 目录被 `.gitignore` 排除，**`file_search` 无法找到其中的文件**。
-正确做法是**直接构造路径用 `read_file` 读取**，命名规则固定：
+`pb-api/` 目录被 `.gitignore` 排除，**默认 `file_search` 找不到其中的文件**。按场景处理：
+
+**场景 A（绝大多数情况）——接口名已知，直接读取**  
+路径规则固定，无需搜索，直接构造路径用 `read_file`：
 
 ```
-<skill目录>/references/pb-api/Sandbox.ModAPI.Ingame.IMyXxx.md
-<skill目录>/references/pb-api/VRageMath.Vector3D.md
+references/pb-api/Sandbox.ModAPI.Ingame.IMyXxx.md
+references/pb-api/VRageMath.Vector3D.md
+references/pb-api/List-Of-Terminal-Properties-And-Actions.md
 ```
 
-示例：
-- 推进器 → `references/pb-api/Sandbox.ModAPI.Ingame.IMyThrust.md`
-- Vector3D → `references/pb-api/VRageMath.Vector3D.md`
-- 终端属性 → `references/pb-api/List-Of-Terminal-Properties-And-Actions.md`
+例：`IMyThrust` → `references/pb-api/Sandbox.ModAPI.Ingame.IMyThrust.md`
 
-如果需要**浏览目录全部文件**（例如不确定接口名），使用 `list_dir` 而非 `file_search`。
+**场景 B——接口名不确定，需要模糊搜索**  
+用 `file_search`，但必须设 `includeIgnoredFiles: true` 才能搜到 gitignore 目录：
+
+```
+file_search(query: "*ShipController*", includeIgnoredFiles: true)
+```
+
+**场景 C——只需确认某接口是否存在**  
+直接 `read_file` 尝试构造路径；若文件不存在会报错，再换 B 方案。  
+**不要用 `list_dir` 遍历整个目录**——那里有 240+ 个文件。
 
 ### pb-api/ 目录缺失时
 
