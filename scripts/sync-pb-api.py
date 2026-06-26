@@ -37,6 +37,18 @@ CACHE_DIR = os.path.join(REPO_ROOT, ".cache", "malforge")
 DEST_DIR = os.path.normpath(os.path.join(REPO_ROOT, "references", "pb-api"))
 
 
+def sanitize_filename(name):
+    """清理发布包校验不接受的文件名字符。"""
+    return name.replace("+", "-").replace("{", "_").replace("}", "_")
+
+
+def remove_stale_unsanitized_file(name, dst_path):
+    """删除清理命名后遗留的旧原名文件。"""
+    stale_path = os.path.join(DEST_DIR, name)
+    if stale_path != dst_path and os.path.exists(stale_path):
+        os.remove(stale_path)
+
+
 def run(args, cwd=None, check=True):
     """运行子进程，出错时打印命令并退出。"""
     result = subprocess.run(args, cwd=cwd)
@@ -86,7 +98,7 @@ def sync_files(force: bool):
                 continue
 
             src_path = os.path.join(src, name)
-            dst_path = os.path.join(DEST_DIR, name)
+            dst_path = os.path.join(DEST_DIR, sanitize_filename(name))
 
             if not os.path.isfile(src_path):
                 continue
@@ -95,16 +107,18 @@ def sync_files(force: bool):
                 src_mtime = os.path.getmtime(src_path)
                 dst_mtime = os.path.getmtime(dst_path) if os.path.exists(dst_path) else 0
                 if src_mtime <= dst_mtime:
+                    remove_stale_unsanitized_file(name, dst_path)
                     skipped += 1
                     continue
 
             shutil.copy2(src_path, dst_path)
+            remove_stale_unsanitized_file(name, dst_path)
             copied += 1
 
     # 单独复制指定文件（来自 input/mod/ 等其他目录）
     for rel_src, dest_name in SINGLE_FILES:
         src_path = os.path.join(CACHE_DIR, rel_src.replace("/", os.sep))
-        dst_path = os.path.join(DEST_DIR, dest_name)
+        dst_path = os.path.join(DEST_DIR, sanitize_filename(dest_name))
         if not os.path.isfile(src_path):
             print(f"警告：找不到单文件源 {src_path}，跳过。", file=sys.stderr)
             continue
@@ -112,9 +126,11 @@ def sync_files(force: bool):
             src_mtime = os.path.getmtime(src_path)
             dst_mtime = os.path.getmtime(dst_path) if os.path.exists(dst_path) else 0
             if src_mtime <= dst_mtime:
+                remove_stale_unsanitized_file(dest_name, dst_path)
                 skipped += 1
                 continue
         shutil.copy2(src_path, dst_path)
+        remove_stale_unsanitized_file(dest_name, dst_path)
         copied += 1
 
     print()

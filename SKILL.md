@@ -29,8 +29,12 @@ references/pb-api/VRageMath.Vector3D.md
 references/pb-api/List-Of-Terminal-Properties-And-Actions.md
 ```
 
+发布包中的 `pb-api` 文件名会清理校验系统不接受的字符：`+` 替换为 `-`，`{` 和 `}` 替换为 `_`。构造路径时也必须使用清理后的文件名。
+
 例：`IMyThrust` → `references/pb-api/Sandbox.ModAPI.Ingame.IMyThrust.md`  
 例：`IMyGravityGenerator` → `references/pb-api/SpaceEngineers.Game.ModAPI.Ingame.IMyGravityGenerator.md`
+例：`Base6Directions.Direction` → `references/pb-api/VRageMath.Base6Directions-Direction.md`  
+例：`IAddOp<T>` → `references/pb-api/VRageMath.IAddOp_T_.md`
 
 **接口名不确定时**：接口名未知导致搜索返回空结果，原因是 gitignore——此时需换用能够绕过 gitignore 的文件发现方式或者参数。
 

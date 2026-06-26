@@ -4,7 +4,8 @@
 .vs/
 obj/
 bin/
-
+*.zip
+__pycache__/
 # sync-pb-api.py 的源仓库缓存（不纳入版本管理）
 .cache/
 
